@@ -1,10 +1,11 @@
 ## Workflow 이름
 name: Deploy to ECR
 
-### Event! 지정 main 브랜치 push
+### Event 새로운 버전 릴리즈시 tag시
 on:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*'
 
 ### build이라는 Job 명시 Runner는 기본값 
 ### 여기서부터 이루어지는 모든작업은 가상머신에서 실행
@@ -19,7 +20,11 @@ jobs:
     ## 브랜치 스위칭  
     - name: Check out code
       uses: actions/checkout@v3
-    
+
+    ## 릴리즈 버전 저장
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
     ## AWS 자격증명 확인
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -38,7 +43,6 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: test
-        IMAGE_TAG: 0.0.2
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$RELEASE_VERSION .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$RELEASE_VERSION
