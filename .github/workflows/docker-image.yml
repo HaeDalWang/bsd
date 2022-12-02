@@ -28,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v3
         env:
           IMAGE_NAME: nginx-test
-          IMAGE_TAG: 0.0.2
+          IMAGE_TAG: latest
         with:
           context: .
           push: true
