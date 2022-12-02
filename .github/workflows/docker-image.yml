@@ -24,12 +24,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and pusha
         uses: docker/build-push-action@v3
-        env:
-          IMAGE_NAME: nginx-hello
-          IMAGE_TAG: 0.0.1
         with:
-          context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME:$IMAGE_TAG
+          tags: svvwac98/nginx-hello:latest
