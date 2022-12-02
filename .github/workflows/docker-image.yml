@@ -27,8 +27,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         env:
-          IMAGE_NAME: nginx-test
-          IMAGE_TAG: latest
+          IMAGE_NAME: nginx-hello
+          IMAGE_TAG: 0.0.1
         with:
           context: .
           push: true
