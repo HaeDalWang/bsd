@@ -1,47 +1,40 @@
-## Workflow 이름
-name: Deploy to ECR
+name: Docker Hub push
 
-### Event 새로운 버전 릴리즈시 tag시
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [ main ]
 
-### build이라는 Job 명시 Runner는 기본값 
-### 여기서부터 이루어지는 모든작업은 가상머신에서 실행
 jobs:
-  build:
-    name: Build Image
+  docker:
     runs-on: ubuntu-latest
-    
-    ## Step 하나하나 실행 
+
     steps:
-      
-    ## 브랜치 스위칭  
-    - name: Check out code
-      uses: actions/checkout@v3
+			### branch 스위칭
+      - name: Checkout
+        uses: actions/checkout@v3
+			
+			### Qemu를 runner안에서 따로 띄운다.
+      -name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-    ## 릴리즈 버전 저장
-    - name: Set env
-      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+			### qemu안에서 Docker Buildx로 빌드를 진행
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    ## AWS 자격증명 확인
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        role-to-assume: ${{ secrets.AWS_ECR_ASSUME }}
-        aws-region: ap-northeast-2
-    
-    ## AWS ECR의 로그인
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    
-    ## build and push 진행
-    - name: Build, tag, and push image to Amazon ECR
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: test
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$RELEASE_VERSION .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$RELEASE_VERSION
+			### 도커허브 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+			### Dockerfile의 위치는 Repo에 '/' 
+      - name: Build and push
+        uses: docker/build-push-action@v3
+				env:
+          IMAGE_NAME: nginx-test
+					IMAGE_TAG: 0.0.1
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME:$IMAGE_TAG
